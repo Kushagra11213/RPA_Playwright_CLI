@@ -1,0 +1,42 @@
+node_modules/
+
+# Local environment and secrets. Keep the example file.
+.env
+.env.*
+!.env.example
+TpaCreds.json
+
+# Playwright CLI command output. Snapshots can contain page data.
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+
+# Workspace runtime files. The shared CLI config stays tracked.
+.playwright/*
+!.playwright/cli.config.json
+
+# Persistent profiles and saved authentication
+.browser-profile/
+artifacts/auth/
+**/*storage-state*.json
+**/*auth-state*.json
+
+# Generated debugging artifacts
+artifacts/*
+!artifacts/.gitkeep
+logs/
+reports/
+test-results/
+playwright-report/
+blob-report/
+
+# Traces, videos, and network logs
+*.trace
+*.har
+*.webm
+trace.zip
+
+# Logs and OS files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

@@ -1,0 +1,27 @@
+{
+  "name": "tpaflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TPAFlow multi-portal Playwright CLI automation",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "cli": "playwright-cli",
+    "cli:help": "playwright-cli --help",
+    "check": "node scripts/check-env.mjs",
+    "browser:install": "playwright-cli install-browser",
+    "browser:list": "playwright-cli install-browser --list",
+    "smoke": "node scripts/smoke.mjs",
+    "start": "node src/main.mjs",
+    "volo:claim": "node src/run-portal.mjs --tpa volo --action claim",
+    "fhpl:preauth": "node src/run-portal.mjs --tpa fhpl --action preauth",
+    "session:list": "playwright-cli list",
+    "session:close": "playwright-cli close-all"
+  },
+  "devDependencies": {
+    "@playwright/cli": "^0.1.22"
+  },
+  "license": "UNLICENSED"
+}
