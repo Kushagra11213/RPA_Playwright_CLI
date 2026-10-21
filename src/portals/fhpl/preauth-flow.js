@@ -113,12 +113,43 @@ async page => {
 
     await frame().locator(`${billing}btnBillingDetails`).click();
     await frame().locator("#fupreauthForm").waitFor({ state: "visible" });
-    page.on("dialog", async (dialog) => {
-      await dialog.accept().catch(() => {});
-    });
+    const captureAlerts = () => {
+      window.__fhplAlerts = window.__fhplAlerts || [];
+      window.alert = (message) => {
+        window.__fhplAlerts.push(String(message ?? ""));
+      };
+      window.confirm = () => true;
+    };
+    await page.addInitScript(captureAlerts);
+    for (const item of page.frames()) {
+      await item.evaluate(captureAlerts).catch(() => {});
+    }
+    const readAlerts = async () => {
+      const messages = [];
+      for (const item of page.frames()) {
+        const found = await item
+          .evaluate(() => {
+            const list = window.__fhplAlerts || [];
+            window.__fhplAlerts = [];
+            return list;
+          })
+          .catch(() => []);
+        messages.push(...found);
+      }
+      const problem = messages.find((message) => /fail|error|please upload|invalid|pdf file only/i.test(message));
+      if (problem) throw new Error(problem);
+      return messages;
+    };
     const closePopup = async () => {
       const close = frame().locator("#ContentPlaceHolder1_TabContainer1_tbAddDocuments_DownloadpdfBack");
       if (await close.isVisible().catch(() => false)) await close.click();
+    };
+    const uploadPdf = async (fileId, buttonId) => {
+      await frame().locator(`#${fileId}`).setInputFiles("artifacts/dummy-claim.pdf");
+      await frame().locator(`#${buttonId}`).click();
+      await page.waitForTimeout(800);
+      await readAlerts();
+      await closePopup();
     };
     await closePopup();
     const slots = [
@@ -130,10 +161,7 @@ async page => {
       ["fuAadhar", "ContentPlaceHolder1_TabContainer1_tbAddDocuments_btnAadhar"],
     ];
     for (const [fileId, buttonId] of slots) {
-      await frame().locator(`#${fileId}`).setInputFiles("artifacts/dummy-claim.pdf");
-      await frame().locator(`#${buttonId}`).click();
-      await page.waitForTimeout(800);
-      await closePopup();
+      await uploadPdf(fileId, buttonId);
     }
     report.filled.push("documents=dummy-claim.pdf");
 
@@ -141,14 +169,8 @@ async page => {
     await page.waitForTimeout(1000);
     if (submitWithFinalBill) {
       await frame().locator("#FUFinal").waitFor({ state: "visible" });
-      await frame().locator("#FUFinal").setInputFiles("artifacts/dummy-claim.pdf");
-      await frame().locator("#ContentPlaceHolder1_TabContainer1_tbAddDocuments_btnFinalbill").click();
-      await page.waitForTimeout(800);
-      await closePopup();
-      await frame().locator("#FUDischargeSummary").setInputFiles("artifacts/dummy-claim.pdf");
-      await frame().locator("#ContentPlaceHolder1_TabContainer1_tbAddDocuments_BtnDischargeSummary").click();
-      await page.waitForTimeout(800);
-      await closePopup();
+      await uploadPdf("FUFinal", "ContentPlaceHolder1_TabContainer1_tbAddDocuments_btnFinalbill");
+      await uploadPdf("FUDischargeSummary", "ContentPlaceHolder1_TabContainer1_tbAddDocuments_BtnDischargeSummary");
       await frame().locator("#ContentPlaceHolder1_TabContainer1_tbAddDocuments_txtDODDate").evaluate((el) => {
         const jq = window.jQuery?.(el);
         if (jq?.datepicker) jq.datepicker("setDate", "25/10/2026");

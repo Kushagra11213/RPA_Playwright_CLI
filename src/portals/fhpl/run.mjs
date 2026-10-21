@@ -11,6 +11,11 @@ const formUrl = "https://epreauth.fhpl.net/PreauthRequest.aspx";
 const sessionName = "fhpl";
 const preauthFlow = path.join(root, "src/portals/fhpl/preauth-flow.js");
 
+function sessionIsOpen(listed, name) {
+  const section = listed.match(new RegExp(`- ${name}:\\n([\\s\\S]*?)(?=\\n- |$)`));
+  return Boolean(section && /status:\s*open/.test(section[1]));
+}
+
 function pageKind(output, snapshotText) {
   const snap = snapshotText(output);
   if (/Oops|Something went wrong/i.test(snap)) return "error";
@@ -39,7 +44,7 @@ export async function runFhplPreauth() {
 
   let current = "";
   const listed = run(["list"], { allowFailure: true });
-  if (/status:\s*open/.test(listed)) {
+  if (sessionIsOpen(listed, sessionName)) {
     log.info("Opening the FHPL preauth form in the existing Chrome window.");
     current = run(["goto", formUrl]);
   } else {

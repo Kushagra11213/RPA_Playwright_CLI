@@ -10,6 +10,11 @@ const loginUrl = "https://provider.volohealthtpa.com/login";
 const sessionName = "volo";
 const claimFlow = path.join(root, "src/portals/volo/claim-flow.js");
 
+function sessionIsOpen(listed, name) {
+  const section = listed.match(new RegExp(`- ${name}:\\n([\\s\\S]*?)(?=\\n- |$)`));
+  return Boolean(section && /status:\s*open/.test(section[1]));
+}
+
 function pageKind(output, snapshotText) {
   const snap = snapshotText(output);
   if (/already Logged-in/i.test(snap)) {
@@ -38,7 +43,7 @@ export async function runVoloClaim() {
 
   let current = "";
   const listed = run(["list"], { allowFailure: true });
-  if (/status:\s*open/.test(listed)) {
+  if (sessionIsOpen(listed, sessionName)) {
     current = run(["snapshot"]);
   } else {
     log.info("Opening the Volo login page in Chrome.");

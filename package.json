@@ -17,6 +17,7 @@
     "start": "node src/main.mjs",
     "volo:claim": "node src/run-portal.mjs --tpa volo --action claim",
     "fhpl:preauth": "node src/run-portal.mjs --tpa fhpl --action preauth",
+    "icici:preauth": "node src/run-portal.mjs --tpa icici --action preauth",
     "session:list": "playwright-cli list",
     "session:close": "playwright-cli close-all"
   },
