@@ -8,6 +8,9 @@ export function createLogger(scope) {
     info(message) {
       console.log(stamp("INFO", scope, message));
     },
+    warn(message) {
+      console.warn(stamp("WARN", scope, message));
+    },
     error(message) {
       console.error(stamp("ERROR", scope, message));
     },

@@ -32,12 +32,14 @@ function pageKind(output, snapshotText) {
   return "unknown";
 }
 
-export async function runVoloClaim() {
+export async function runVoloClaim({ credentials } = {}) {
   const { run, snapshotText, refFor } = createPlaywrightSession(sessionName);
   const identity = preparePortalEnv({
     match: "volohealthtpa.com",
     baseUrl: loginUrl,
     session: sessionName,
+    username: credentials?.username,
+    password: credentials?.password,
   });
   log.info(`Prepared credentials for ${identity.tpaName} (${identity.username}).`);
 

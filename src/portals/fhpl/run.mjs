@@ -33,12 +33,14 @@ function ref(text, patterns, label) {
   throw new AutomationError(`Could not find ${label} on the page.`, { code: "LOCATOR" });
 }
 
-export async function runFhplPreauth() {
+export async function runFhplPreauth({ credentials } = {}) {
   const { run, snapshotText } = createPlaywrightSession(sessionName);
   const identity = preparePortalEnv({
     match: "epreauth.fhpl.net",
     baseUrl: loginUrl,
     session: sessionName,
+    username: credentials?.username,
+    password: credentials?.password,
   });
   log.info(`Prepared credentials for ${identity.tpaName} (${identity.username}).`);
 
