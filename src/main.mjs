@@ -1,17 +1,17 @@
-import { dispatch } from "./dispatcher.mjs";
-import { resolvePortalFromApis } from "./integrations/case-source.mjs";
+import { runApiBatch } from "./integrations/case-source.mjs";
 import { AutomationError } from "./shared/errors.mjs";
 import { createLogger } from "./shared/logger.mjs";
+import { loadEnv } from "./shared/load-env.mjs";
+
+loadEnv();
 
 const log = createLogger("tpaflow");
 
 try {
-  const request = await resolvePortalFromApis();
-  log.info(`API selected ${request.tpaId}${request.action ? ` ${request.action}` : ""}.`);
-  await dispatch({
-    tpaId: request.tpaId,
-    action: request.action,
-  });
+  const summary = await runApiBatch();
+  if (summary.failed > 0) {
+    process.exitCode = 1;
+  }
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   log.error(message);

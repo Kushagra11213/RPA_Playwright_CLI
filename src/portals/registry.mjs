@@ -6,6 +6,8 @@ export const portals = {
   volo: {
     id: "volo",
     defaultAction: "claim",
+    hosts: ["provider.volohealthtpa.com"],
+    names: ["volo"],
     actions: {
       claim: runVoloClaim,
     },
@@ -13,6 +15,8 @@ export const portals = {
   fhpl: {
     id: "fhpl",
     defaultAction: "preauth",
+    hosts: ["epreauth.fhpl.net"],
+    names: ["family health", "epreauth", "fhpl"],
     actions: {
       preauth: runFhplPreauth,
     },
@@ -20,6 +24,8 @@ export const portals = {
   icici: {
     id: "icici",
     defaultAction: "preauth",
+    hosts: ["ilhc.icicilombard.com"],
+    names: ["icici lombard", "ilhc"],
     actions: {
       preauth: runIciciPreauth,
     },

@@ -41,12 +41,14 @@ function blockDevtool(run) {
   ]);
 }
 
-export async function runIciciPreauth() {
+export async function runIciciPreauth({ credentials } = {}) {
   const { run, snapshotText } = createPlaywrightSession(sessionName);
   const identity = preparePortalEnv({
     match: "ilhc.icicilombard.com",
     baseUrl: loginUrl,
     session: sessionName,
+    username: credentials?.username,
+    password: credentials?.password,
   });
   log.info(`Prepared credentials for ${identity.tpaName} (${identity.username}).`);
 

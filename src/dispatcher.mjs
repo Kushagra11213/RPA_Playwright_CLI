@@ -4,7 +4,7 @@ import { getPortal, listPortalIds } from "./portals/registry.mjs";
 
 const log = createLogger("dispatcher");
 
-export async function dispatch({ tpaId, action = "claim" }) {
+export async function dispatch({ tpaId, action, credentials, caseData } = {}) {
   const id = String(tpaId ?? "").trim().toLowerCase();
   if (!id) {
     throw new AutomationError(`A TPA id is required. Registered portals: ${listPortalIds().join(", ")}.`, {
@@ -29,6 +29,6 @@ export async function dispatch({ tpaId, action = "claim" }) {
   }
 
   log.info(`Running ${portal.id} ${actionName}.`);
-  await run();
+  await run({ credentials, caseData });
   log.info(`Finished ${portal.id} ${actionName}.`);
 }

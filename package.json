@@ -15,6 +15,7 @@
     "browser:list": "playwright-cli install-browser --list",
     "smoke": "node scripts/smoke.mjs",
     "start": "node src/main.mjs",
+    "test": "node --test tests/api-flow.test.mjs",
     "volo:claim": "node src/run-portal.mjs --tpa volo --action claim",
     "fhpl:preauth": "node src/run-portal.mjs --tpa fhpl --action preauth",
     "icici:preauth": "node src/run-portal.mjs --tpa icici --action preauth",

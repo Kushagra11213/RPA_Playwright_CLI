@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { AutomationError } from "./errors.mjs";
 import { credentialsFile, secretsFile } from "./paths.mjs";
@@ -7,7 +7,17 @@ function envValue(value) {
   return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
-export function preparePortalEnv({ match, baseUrl, session }) {
+function preservedEnv(file) {
+  const values = new Map();
+  if (!existsSync(file)) return values;
+  for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
+    const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
+    if (match) values.set(match[1], match[2]);
+  }
+  return values;
+}
+
+export function preparePortalEnv({ match, baseUrl, session, username, password }) {
   const needle = String(match ?? "").trim().toLowerCase();
   if (!needle) {
     throw new AutomationError("A portal host or TPA name is required to load credentials.", {
@@ -43,27 +53,26 @@ export function preparePortalEnv({ match, baseUrl, session }) {
   }
 
   const entry = matches[0];
-  if (!entry.username || !entry.password) {
+  const loginUsername = username || entry.username;
+  const loginPassword = password || entry.password;
+  if (!loginUsername || !loginPassword) {
     throw new AutomationError(`Credential match has no username or password: ${entry.tpaName}`, {
       code: "CREDENTIALS_MISSING",
     });
   }
 
-  writeFileSync(
-    secretsFile,
-    [
-      `BASE_URL=${envValue(baseUrl)}`,
-      `LOGIN_USERNAME=${envValue(entry.username)}`,
-      `LOGIN_PASSWORD=${envValue(entry.password)}`,
-      `PLAYWRIGHT_CLI_SESSION=${session}`,
-      "",
-    ].join("\n"),
-    "utf8",
-  );
+  const values = preservedEnv(secretsFile);
+  values.set("BASE_URL", envValue(baseUrl));
+  values.set("LOGIN_USERNAME", envValue(loginUsername));
+  values.set("LOGIN_PASSWORD", envValue(loginPassword));
+  values.set("PLAYWRIGHT_CLI_SESSION", session);
+  const preferred = ["BASE_URL", "LOGIN_USERNAME", "LOGIN_PASSWORD", "PLAYWRIGHT_CLI_SESSION"];
+  const keys = [...preferred, ...[...values.keys()].filter((key) => !preferred.includes(key))];
+  writeFileSync(secretsFile, `${keys.map((key) => `${key}=${values.get(key)}`).join("\n")}\n`, "utf8");
 
   return {
     tpaName: entry.tpaName,
-    username: entry.username,
+    username: loginUsername,
     secretsFile,
   };
 }
