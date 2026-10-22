@@ -189,9 +189,14 @@ test("the checked-in TpaCreds list resolves the registered portals only", () => 
     tpa: "STAR HEALTH AND ALLIED INSURANCE",
     url: "https://provider.ihx.in/",
   })), entries);
+  const digit = matchTpaCase(casePayload(credential({
+    tpa: "GO DIGIT GENERAL INSURANCE",
+    url: "https://first.godigit.com/",
+  })), entries);
 
   assert.equal(volo.portal.id, "volo");
   assert.equal(fhpl.portal.id, "fhpl");
+  assert.equal(digit.portal.id, "digit");
   assert.equal(star.matched, false);
 });
 

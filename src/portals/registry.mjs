@@ -34,6 +34,8 @@ export const portals = {
   digit: {
     id: "digit",
     defaultAction: "admission",
+    hosts: ["first.godigit.com"],
+    names: ["go digit"],
     actions: {
       admission: runDigitAdmission,
     },

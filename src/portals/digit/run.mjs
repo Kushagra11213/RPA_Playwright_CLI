@@ -31,12 +31,14 @@ function ref(text, patterns, label) {
   throw new AutomationError(`Could not find ${label} on the page.`, { code: "LOCATOR" });
 }
 
-export async function runDigitAdmission() {
+export async function runDigitAdmission({ credentials } = {}) {
   const { run, snapshotText } = createPlaywrightSession(sessionName);
   const identity = preparePortalEnv({
     match: "first.godigit.com",
     baseUrl: loginUrl,
     session: sessionName,
+    username: credentials?.username,
+    password: credentials?.password,
   });
   log.info(`Prepared credentials for ${identity.tpaName} (${identity.username}).`);
 
