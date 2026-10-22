@@ -18,6 +18,7 @@
     "volo:claim": "node src/run-portal.mjs --tpa volo --action claim",
     "fhpl:preauth": "node src/run-portal.mjs --tpa fhpl --action preauth",
     "icici:preauth": "node src/run-portal.mjs --tpa icici --action preauth",
+    "digit:admission": "node src/run-portal.mjs --tpa digit --action admission",
     "session:list": "playwright-cli list",
     "session:close": "playwright-cli close-all"
   },
@@ -26,3 +27,4 @@
   },
   "license": "UNLICENSED"
 }
+
