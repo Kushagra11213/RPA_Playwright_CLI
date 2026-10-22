@@ -1,3 +1,4 @@
+import { runDigitAdmission } from "./digit/run.mjs";
 import { runFhplPreauth } from "./fhpl/run.mjs";
 import { runIciciPreauth } from "./icici/run.mjs";
 import { runVoloClaim } from "./volo/run.mjs";
@@ -30,12 +31,21 @@ export const portals = {
       preauth: runIciciPreauth,
     },
   },
+  digit: {
+    id: "digit",
+    defaultAction: "admission",
+    actions: {
+      admission: runDigitAdmission,
+    },
+  },
 };
 
 const aliases = {
   epreauth: "fhpl",
   ilhc: "icici",
   icicilombard: "icici",
+  godigit: "digit",
+  digitfirst: "digit",
 };
 
 export function listPortalIds() {
