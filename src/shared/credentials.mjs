@@ -77,6 +77,22 @@ export function preparePortalEnv({ match, baseUrl, session, username, password }
   };
 }
 
+export function writeSecret(key, value) {
+  const secretKey = String(key ?? "").trim();
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(secretKey)) {
+    throw new AutomationError("A secret name is required.", { code: "CREDENTIALS_CONFIG" });
+  }
+  const values = preservedEnv(secretsFile);
+  values.set(secretKey, envValue(value));
+  const preferred = ["BASE_URL", "LOGIN_USERNAME", "LOGIN_PASSWORD", "PLAYWRIGHT_CLI_SESSION", "LOGIN_OTP"];
+  const keys = [
+    ...preferred.filter((item) => values.has(item)),
+    ...[...values.keys()].filter((item) => !preferred.includes(item)),
+  ];
+  writeFileSync(secretsFile, `${keys.map((item) => `${item}=${values.get(item)}`).join("\n")}\n`, "utf8");
+  process.env[secretKey] = String(value);
+}
+
 export function secretsPath() {
   return path.resolve(secretsFile);
 }

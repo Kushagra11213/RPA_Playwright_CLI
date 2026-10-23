@@ -55,10 +55,10 @@ async page => {
       let entered = "";
       while (Date.now() - started < 180000) {
         entered = (await otp.inputValue().catch(() => "")).trim();
-        if (entered.length >= 6) break;
+        if (entered.length >= 4) break;
         await page.waitForTimeout(1000);
       }
-      if (entered.length < 6) throw new Error("OTP was not entered in the Chrome window.");
+      if (entered.length < 4) throw new Error("OTP was not available.");
       await page.locator("#btnVerify").click();
       await page.waitForTimeout(2500);
       await readAlerts();

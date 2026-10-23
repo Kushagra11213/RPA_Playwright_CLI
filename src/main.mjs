@@ -6,12 +6,16 @@ import { loadEnv } from "./shared/load-env.mjs";
 loadEnv();
 
 const log = createLogger("tpaflow");
+let stop = false;
+
+process.on("SIGINT", () => {
+  if (stop) return;
+  stop = true;
+  log.info("Stopping after the current case.");
+});
 
 try {
-  const summary = await runApiBatch();
-  if (summary.failed > 0) {
-    process.exitCode = 1;
-  }
+  await runApiBatch({ shouldStop: () => stop });
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   log.error(message);

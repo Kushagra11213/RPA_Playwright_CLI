@@ -262,6 +262,7 @@ test("the batch runs matching portals one case at a time and skips the rest", as
   const { result, lines } = await captureConsole(() => runApiBatch({
     client,
     credentialEntries: configuredEntries,
+    maxPolls: 1,
     async dispatchImpl(input) {
       assert.equal(input.credentials.password, SECRET);
       dispatched.push({ tpaId: input.tpaId, caseId: input.caseData.pmjayRegistrationId });
@@ -323,4 +324,53 @@ test("missing API credentials stop before a request is sent", async () => {
     await client.login();
   }, /RPA_PASSWORD is required/);
   assert.equal(called, false);
+});
+
+test("polling waits 30 seconds and opens only a new case on the next check", async () => {
+  const dispatched = [];
+  const waits = [];
+  let polls = 0;
+  const client = createRpaClient({
+    env: {
+      RPA_API_BASE: "https://apistaging.settlemed.in",
+      RPA_USERNAME: "rpa-user",
+      RPA_PASSWORD: SECRET,
+    },
+    fetchImpl(url) {
+      const parsed = new URL(url);
+      if (parsed.pathname === "/rpa-login") return jsonResponse({ session: { token: TOKEN } });
+      if (parsed.pathname === "/rpa-requests") {
+        polls += 1;
+        const requests = polls === 1
+          ? [{ pmjayRegistrationId: "111", isTpa: true, documentType: "ADMISSIONDOCUMENT" }]
+          : [
+              { pmjayRegistrationId: "111", isTpa: true, documentType: "ADMISSIONDOCUMENT" },
+              { pmjayRegistrationId: "777", isTpa: true, documentType: "ADMISSIONDOCUMENT" },
+            ];
+        return jsonResponse({ requests });
+      }
+      const registrationId = parsed.searchParams.get("pmjayRegistrationId");
+      return jsonResponse(casePayload(credential({
+        tpa: "VOLO HEALTH INSURANCE TPA PVT LTD",
+        url: "https://provider.volohealthtpa.com/home",
+      }), { registrationId }));
+    },
+  });
+
+  await captureConsole(() => runApiBatch({
+    client,
+    credentialEntries: configuredEntries,
+    maxPolls: 2,
+    pollIntervalMs: 30_000,
+    sleep(ms) {
+      waits.push(ms);
+      return Promise.resolve();
+    },
+    async dispatchImpl(input) {
+      dispatched.push(input.caseData.pmjayRegistrationId);
+    },
+  }));
+
+  assert.deepEqual(dispatched, ["111", "777"]);
+  assert.deepEqual(waits, [30_000]);
 });

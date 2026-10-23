@@ -1,6 +1,6 @@
 # TPAFlow
 
-`npm start` runs `src/main.mjs`. It logs in through `rpa-login`, loads cases from `rpa-requests`, and calls `tpa-case-data` for each registration id. A case runs only when its TPA matches `TpaCreds.json` and a registered portal. Set `RPA_API_BASE`, `RPA_USERNAME`, and `RPA_PASSWORD` in `.env` first.
+`npm start` runs `src/main.mjs` and keeps checking for cases every 30 seconds until you stop it with Ctrl+C. It logs in through `rpa-login`, loads cases from `rpa-requests`, and calls `tpa-case-data` for each new registration id. A case runs only when its TPA matches `TpaCreds.json` and a registered portal. Set `RPA_API_BASE`, `RPA_USERNAME`, and `RPA_PASSWORD` in `.env` first.
 
 Test one portal on its own, with no API call:
 
@@ -49,7 +49,7 @@ Run these from the project root.
 
 | Script | What it does |
 | --- | --- |
-| `npm start` | Logs in, loads every TPA case, and runs only the matching registered portal |
+| `npm start` | Keeps checking every 30 seconds and runs each new case on its matching portal |
 | `npm run volo:claim` | Tests the Volo portal only. Signs in, opens Add Claim, and fills the form without clicking Save Claim |
 | `npm run fhpl:preauth` | Tests the FHPL portal only. Signs in, fills the preauth, uploads dummy documents, and does not click Submit |
 | `npm run cli:help` | Prints CLI commands |

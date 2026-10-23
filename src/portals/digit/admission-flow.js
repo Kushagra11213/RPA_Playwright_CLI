@@ -49,22 +49,24 @@ async page => {
     await page.addInitScript(captureAlerts);
     await page.evaluate(captureAlerts).catch(() => {});
 
-    const otp = page.locator("#code");
-    if (await otp.isVisible().catch(() => false)) {
+    const otp = page.getByRole("textbox", { name: "Enter OTP" });
+    const legacyOtp = page.locator("#code");
+    const otpField = (await otp.isVisible().catch(() => false)) ? otp : legacyOtp;
+    if (await otpField.isVisible().catch(() => false)) {
       const readOtp = async () => {
-        const visible = (await otp.inputValue().catch(() => "")).trim();
+        const visible = (await otpField.inputValue().catch(() => "")).trim();
         const hidden = (await page.locator("#otp_hidden").inputValue().catch(() => "")).trim();
         return hidden.length >= visible.length ? hidden : visible;
       };
       const started = Date.now();
       let entered = "";
-      while (Date.now() - started < 180000) {
+      while (Date.now() - started < 20000) {
         entered = await readOtp();
-        if (entered.length >= 6) break;
-        await page.waitForTimeout(1000).catch(() => {});
+        if (entered.length >= 4) break;
+        await page.waitForTimeout(500).catch(() => {});
         if (page.isClosed()) break;
       }
-      if (entered.length < 6) throw new Error("OTP was not entered in the Chrome window.");
+      if (entered.length < 4) throw new Error("OTP was not entered in the Go Digit OTP box.");
       await page.getByRole("button", { name: /^login$/i }).click();
       await page.waitForURL((url) => !url.href.includes("accounts.godigit.com"), { timeout: 30000 }).catch(() => {});
       const stillThere = await otp.isVisible().catch(() => false);

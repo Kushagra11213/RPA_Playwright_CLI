@@ -1,4 +1,6 @@
+import { writeFileSync } from "node:fs";
 import path from "node:path";
+import { fetchEmailOtp } from "../../integrations/email-otp.mjs";
 import { preparePortalEnv } from "../../shared/credentials.mjs";
 import { AutomationError } from "../../shared/errors.mjs";
 import { createLogger } from "../../shared/logger.mjs";
@@ -70,7 +72,37 @@ export async function runDigitAdmission({ credentials } = {}) {
   }
 
   if (kind === "otp") {
-    log.info("OTP is on screen. Type the 6-digit OTP in the Chrome window. Login is clicked after 6 digits.");
+    log.info("Reading the Go Digit OTP from noreply@godigit.com.");
+    const otp = await fetchEmailOtp("noreply@godigit.com");
+    log.info(`Go Digit OTP is ${otp}.`);
+    const otpScript = path.join(root, "artifacts", "digit-enter-otp.js");
+    writeFileSync(
+      otpScript,
+      `async page => {
+  const box = page.getByRole("textbox", { name: "Enter OTP" });
+  await box.waitFor({ state: "visible", timeout: 20000 });
+  await box.click();
+  await box.fill(${JSON.stringify(otp)});
+  let entered = (await box.inputValue()).trim();
+  if (entered !== ${JSON.stringify(otp)}) {
+    await box.fill("");
+    await box.pressSequentially(${JSON.stringify(otp)}, { delay: 40 });
+    entered = (await box.inputValue()).trim();
+  }
+  await page.getByRole("button", { name: /^Login$/ }).click();
+  await page.waitForURL((url) => !String(url).includes("accounts.godigit.com"), { timeout: 30000 }).catch(() => {});
+  return { entered, leftLogin: !page.url().includes("accounts.godigit.com") };
+}
+`,
+      "utf8",
+    );
+    const submitted = run(["run-code", `--filename=${otpScript}`]);
+    if (!/"leftLogin":true/.test(submitted)) {
+      throw new AutomationError("Go Digit did not accept the email OTP. The browser is still on the OTP page.", {
+        code: "LOGIN",
+      });
+    }
+    log.info("Go Digit OTP entered and Login clicked.");
   }
 
   log.info("Continuing the admission. The final Submit will not be clicked.");
